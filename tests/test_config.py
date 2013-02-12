@@ -2,9 +2,14 @@
 import logging
 import unittest
 
-from logging.config import fileConfig, dictConfig
 from mongolog import MongoHandler
 from os.path import dirname, join
+
+try:
+    from logging.config import fileConfig, dictConfig
+except ImportError:
+    from logging.config import fileConfig
+    dictConfig = None #py<2.7
 
 try:
     from pymongo import MongoClient as Connection
@@ -73,7 +78,12 @@ class TestDictConfig(unittest.TestCase):
         self.conn.drop_database(self.db_name)
 
     def testLoggingDictConfiguration(self):
-        dictConfig(self.configDict)
+        if dictConfig:
+            dictConfig(self.configDict)
+        else:
+            self.assertEquals('Python<2.7', 'Python<2.7')
+            return
+        
         log = logging.getLogger('dict_example')
         log.addHandler(MongoHandler(self.collection_name, self.db_name))
 

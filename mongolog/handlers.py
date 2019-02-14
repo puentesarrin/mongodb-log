@@ -13,8 +13,12 @@ try:
 except ImportError:
     from pymongo import Connection
 
-if sys.version_info[0] >= 3:
+try:
+    unicode
+except NameError:
     unicode = str
+#if sys.version_info[0] >= 3: // this should work though...
+#    unicode = str
 
 class MongoFormatter(logging.Formatter):
     def format(self, record):

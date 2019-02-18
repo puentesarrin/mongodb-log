@@ -13,12 +13,7 @@ try:
 except ImportError:
     from pymongo import Connection
 
-try:
-    unicode
-except NameError:
-    unicode = str
-#if sys.version_info[0] >= 3: // this should work though...
-#    unicode = str
+
 
 class MongoFormatter(logging.Formatter):
     def format(self, record):
@@ -29,7 +24,10 @@ class MongoFormatter(logging.Formatter):
             msg = record.msg % record.args
         else:
             msg = record.msg
-
+        try:
+            unicode
+        except NameError:
+            unicode = str
         data.update(
             username=getpass.getuser(),
             time=datetime.now(),

@@ -23,6 +23,7 @@ class MongoFormatter(logging.Formatter):
             msg = record.msg % record.args
         else:
             msg = record.msg
+
         try:
             unicode
         except NameError:

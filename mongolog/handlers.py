@@ -14,7 +14,6 @@ except ImportError:
     from pymongo import Connection
 
 
-
 class MongoFormatter(logging.Formatter):
     def format(self, record):
         """Format exception object as a string"""

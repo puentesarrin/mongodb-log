@@ -1,1 +1,3 @@
 include README.rst LICENSE
+recursive-include tests *.py *.config
+recursive-include samples *.py

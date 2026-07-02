@@ -1,6 +1,13 @@
-*.pyc
+*.py[cod]
 *.swp
 *.nja
-.eggs/*
-mongolog.egg-info/*
-dist/*
+__pycache__/
+*/__pycache__/
+.eggs/
+*.egg-info/
+build/
+dist/
+.tox/
+.coverage
+coverage.xml
+.venv/

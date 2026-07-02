@@ -1,110 +1,105 @@
-MongoLog: Centralized logging made simple using MongoDB
-=======================================================
+MongoLog: centralized logging with MongoDB
+==========================================
 
-.. image:: https://travis-ci.org/puentesarrin/mongodb-log.png
-    :target: https://travis-ci.org/puentesarrin/mongodb-log
-    :alt: Travis CI status
+.. image:: https://github.com/puentesarrin/mongodb-log/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/puentesarrin/mongodb-log/actions/workflows/ci.yml
+   :alt: CI status
 
-.. image:: https://pypip.in/v/mongolog/badge.png
-    :target: https://pypi.python.org/pypi/mongolog
-    :alt: Latest PyPI version
+.. image:: https://coveralls.io/repos/github/puentesarrin/mongodb-log/badge.svg?branch=master
+   :target: https://coveralls.io/github/puentesarrin/mongodb-log?branch=master
+   :alt: Coverage status
 
-.. image:: https://pypip.in/d/mongolog/badge.png
-    :target: https://pypi.python.org/pypi/mongolog
-    :alt: Number of PyPI downloads
+.. image:: https://img.shields.io/pypi/v/mongolog.svg
+   :target: https://pypi.org/project/mongolog/
+   :alt: PyPI version
 
-:Info: MongoDB python logging handler. Python centralized logging made easy.
-:Author: `Andrei Savu`_
-:Maintainer: `Jorge Puente Sarrín`_
+MongoLog is a Python logging handler that stores standard ``logging`` records
+in a MongoDB collection. It keeps the normal log record fields and adds useful
+context such as host, current user, UTC time, rendered message text, and
+formatted exception tracebacks.
 
-Setup
------
+MongoLog supports Python 3.9 and newer. CI tests against MongoDB 5, 6, 7, and 8.
 
-Before using this handler for logging you will need to create a capped
-collection on the MongoDB server.
+Installation
+------------
 
-You can do this using the following commands in the MongoDB shell::
+Install from PyPI::
+
+   $ python -m pip install mongolog
+
+Or install the latest source checkout::
+
+   $ python -m pip install git+https://github.com/puentesarrin/mongodb-log.git
+
+MongoDB setup
+-------------
+
+Create a collection for log records. A capped collection is useful for log data
+because older records automatically roll out when the collection reaches its
+configured size::
 
    > use mongolog
-   > db.createCollection('log', {capped:true, size:100000})
-
-... and you are ready. Running ``stats()`` function on ``log`` collection
-should show something like this::
-
-   > db.log.stats()
-   {
-           "ns" : "mongolog.log",
-           "count" : 0,
-           "size" : 0,
-           "storageSize" : 102400,
-           "numExtents" : 1,
-           "nindexes" : 1,
-           "lastExtentSize" : 102400,
-           "paddingFactor" : 1,
-           "systemFlags" : 1,
-           "userFlags" : 0,
-           "totalIndexSize" : 8176,
-           "indexSizes" : {
-                   "_id_" : 8176
-           },
-           "capped" : true,
-           "max" : 2147483647,
-           "ok" : 1
-   }
-
+   > db.createCollection('log', {capped: true, size: 100000})
 
 Usage
 -----
 
->>> import logging
->>> from mongolog.handlers import MongoHandler
->>>
->>> log = logging.getLogger('demo')
->>> log.setLevel(logging.DEBUG)
->>> log.addHandler(MongoHandler.to(db='mongolog', collection='log'))
->>>
->>> log.debug('Some message')
+Add ``MongoHandler`` to any standard Python logger::
+
+   import logging
+
+   from mongolog import MongoHandler
 
 
-Check the samples folder for more details.
+   log = logging.getLogger('demo')
+   log.setLevel(logging.DEBUG)
+   log.addHandler(MongoHandler.to('log', db='mongolog'))
 
+   log.debug('Some message')
 
-Why centralized logging?
-------------------------
+Structured messages remain queryable in MongoDB because MongoLog stores the
+original ``record.msg`` value::
 
-* Easy troubleshouting:
-    * Having the answers to why? quickly and accurately.
-    * For troubleshouting while the system is down.
-    * Removed risk of loss of log information.
-* Resource tracking.
-* Security.
+   log.info({'address': '340 N 12th St', 'state': 'PA', 'country': 'US'})
 
+Development
+-----------
 
-What is MongoDB?
-----------------
+Install development tools and run the test suite with tox::
 
-"MongoDB is a high-performance, open source, schema-free document-oriented
-database."
+   $ python -m pip install -e ".[dev]"
+   $ tox
 
-It can eficiently store arbitrary JSON objects. You can read more at
-`MongoDB website`_.
+The tests use a real MongoDB server. By default they connect to
+``localhost:27017``. Override that with ``MONGO_HOST`` and ``MONGO_PORT``::
 
+   $ MONGO_HOST=localhost MONGO_PORT=27017 tox
 
-Why MongoDB is great for logging?
----------------------------------
+Run the same tests directly with unittest::
 
-* MongoDB inserts can be done asynchronously.
-* Old log data automatically LRU's out thanks to capped collections.
-* It's fast enough for the problem.
-* Document-oriented / JSON is a great format for log information.
+   $ python -m unittest discover -s tests -p 'test_*.py'
 
-Read more about this subject on the `MongoDB blog`_.
+To test against specific Python interpreters installed on your machine::
 
+   $ tox -e py39,py310,py311,py312,py313,py314
 
-Have fun!
+Releases
+--------
 
+CI builds the source distribution and wheel on every push. Tag pushes publish
+to PyPI through GitHub Actions Trusted Publishing using the ``pypi`` environment.
+
+License
+-------
+
+MongoLog is available under the BSD 2-Clause License.
+
+Authors
+-------
+
+Original author: `Andrei Savu`_
+
+Maintainer: `Jorge Puente Sarrín`_
 
 .. _Andrei Savu: https://github.com/andreisavu
 .. _Jorge Puente Sarrín: https://github.com/puentesarrin
-.. _MongoDB website: http://www.mongodb.org
-.. _MongoDB blog: http://blog.mongodb.org/post/172254834/mongodb-is-fantastic-for-logging

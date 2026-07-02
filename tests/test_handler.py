@@ -1,65 +1,57 @@
-# -*- coding: utf-8 *-*
-import logging
 import unittest
 
 from mongolog import MongoHandler
-
-try:
-    from pymongo import MongoClient as Connection
-except ImportError:
-    from pymongo import Connection
+from tests.support import clean_logger, mongo_client, mongo_options
 
 
 class TestRootLoggerHandler(unittest.TestCase):
-    """
-    Test Handler attached to RootLogger
-    """
     def setUp(self):
-        """ Create an empty database that could be used for logging """
         self.db_name = '_mongolog_test'
         self.collection_name = 'log'
 
-        self.conn = Connection()
+        self.conn = mongo_client()
         self.db = self.conn[self.db_name]
         self.collection = self.db[self.collection_name]
 
         self.conn.drop_database(self.db_name)
 
     def tearDown(self):
-        """ Drop used database """
         self.conn.drop_database(self.db_name)
+        self.conn.close()
 
-    def testLogging(self):
-        """ Simple logging example """
-        log = logging.getLogger('log')
-        log.setLevel(logging.DEBUG)
-        log.addHandler(MongoHandler(self.collection_name, self.db_name))
+    def test_logging(self):
+        log = clean_logger('log')
+        log.addHandler(
+            MongoHandler(self.collection_name, self.db_name, **mongo_options())
+        )
 
         log.debug('test')
 
-        r = self.collection.find_one({'levelname': 'DEBUG', 'msg': 'test'})
-        self.assertEqual(r['msg'], 'test')
+        record = self.collection.find_one({'levelname': 'DEBUG', 'msg': 'test'})
+        self.assertEqual(record['msg'], 'test')
+        self.assertEqual(record['message'], 'test')
 
-    def testLoggingException(self):
-        """ Logging example with exception """
-        log = logging.getLogger('exception')
-        log.setLevel(logging.DEBUG)
-        log.addHandler(MongoHandler(self.collection_name, self.db_name))
+    def test_logging_exception(self):
+        log = clean_logger('exception')
+        log.addHandler(
+            MongoHandler(self.collection_name, self.db_name, **mongo_options())
+        )
 
         try:
             1 / 0
         except ZeroDivisionError:
             log.error('test zero division', exc_info=True)
 
-        r = self.collection.find_one({'levelname': 'ERROR',
-            'msg': 'test zero division'})
-        self.assertTrue(r['exc_info'].startswith('Traceback'))
+        record = self.collection.find_one(
+            {'levelname': 'ERROR', 'msg': 'test zero division'}
+        )
+        self.assertTrue(record['exc_info'].startswith('Traceback'))
 
-    def testQueryableMessages(self):
-        """ Logging example with dictionary """
-        log = logging.getLogger('query')
-        log.setLevel(logging.DEBUG)
-        log.addHandler(MongoHandler(self.collection_name, self.db_name))
+    def test_queryable_messages(self):
+        log = clean_logger('query')
+        log.addHandler(
+            MongoHandler(self.collection_name, self.db_name, **mongo_options())
+        )
 
         log.info({'address': '340 N 12th St', 'state': 'PA', 'country': 'US'})
         log.info({'address': '340 S 12th St', 'state': 'PA', 'country': 'US'})
@@ -70,12 +62,7 @@ class TestRootLoggerHandler(unittest.TestCase):
             'msg.address': '340 N 12th St',
         }
         docs_count = self.collection.count_documents(query)
-        self.assertEqual(
-            docs_count,
-            1,
-            "Expected query to return 1 "
-            "message; it returned %d" % docs_count
-        )
+        self.assertEqual(docs_count, 1)
         cursor = self.collection.find(query)
         self.assertEqual(cursor[0]['msg']['address'], '340 N 12th St')
 
@@ -84,8 +71,4 @@ class TestRootLoggerHandler(unittest.TestCase):
             'msg.state': 'PA',
         }
         docs_count = self.collection.count_documents(query)
-        self.assertEqual(
-            docs_count,
-            3,
-            "Didn't find all three documents"
-        )
+        self.assertEqual(docs_count, 3)

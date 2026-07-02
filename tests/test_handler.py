@@ -1,7 +1,7 @@
 import unittest
 
 from mongolog import MongoHandler
-from tests.support import clean_logger, mongo_client, mongo_options
+from tests.support import clean_logger, mongo_client, mongo_handler_options
 
 
 class TestRootLoggerHandler(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestRootLoggerHandler(unittest.TestCase):
     def test_logging(self):
         log = clean_logger('log')
         log.addHandler(
-            MongoHandler(self.collection_name, self.db_name, **mongo_options())
+            MongoHandler(self.collection_name, self.db_name, **mongo_handler_options())
         )
 
         log.debug('test')
@@ -34,7 +34,7 @@ class TestRootLoggerHandler(unittest.TestCase):
     def test_logging_exception(self):
         log = clean_logger('exception')
         log.addHandler(
-            MongoHandler(self.collection_name, self.db_name, **mongo_options())
+            MongoHandler(self.collection_name, self.db_name, **mongo_handler_options())
         )
 
         try:
@@ -50,7 +50,7 @@ class TestRootLoggerHandler(unittest.TestCase):
     def test_queryable_messages(self):
         log = clean_logger('query')
         log.addHandler(
-            MongoHandler(self.collection_name, self.db_name, **mongo_options())
+            MongoHandler(self.collection_name, self.db_name, **mongo_handler_options())
         )
 
         log.info({'address': '340 N 12th St', 'state': 'PA', 'country': 'US'})

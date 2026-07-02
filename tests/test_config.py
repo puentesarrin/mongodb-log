@@ -4,7 +4,7 @@ from logging.config import dictConfig, fileConfig
 from os.path import dirname, join
 
 from mongolog import MongoHandler
-from tests.support import clean_logger, mongo_client, mongo_options
+from tests.support import clean_logger, mongo_client, mongo_handler_options
 
 
 class TestConfig(unittest.TestCase):
@@ -28,7 +28,7 @@ class TestConfig(unittest.TestCase):
     def test_logging_file_configuration(self):
         log = clean_logger('example')
         log.addHandler(
-            MongoHandler(self.collection_name, self.db_name, **mongo_options())
+            MongoHandler(self.collection_name, self.db_name, **mongo_handler_options())
         )
 
         log.debug('test')
@@ -42,7 +42,7 @@ class TestDictConfig(unittest.TestCase):
         self.db_name = '_mongolog_test_dict'
         self.collection_name = 'log_test'
 
-        options = mongo_options()
+        options = mongo_handler_options()
         self.config_dict = {
             'version': 1,
             'handlers': {

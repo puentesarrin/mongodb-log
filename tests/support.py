@@ -6,7 +6,7 @@ from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 
 
-def mongo_options():
+def mongo_client_options():
     port = os.environ.get('MONGO_PORT')
     return {
         'host': os.environ.get('MONGO_HOST', 'localhost'),
@@ -15,8 +15,16 @@ def mongo_options():
     }
 
 
+def mongo_handler_options():
+    options = mongo_client_options()
+    return {
+        'host': options['host'],
+        'port': options['port'],
+    }
+
+
 def mongo_client(**options):
-    client = MongoClient(**mongo_options(), **options)
+    client = MongoClient(**mongo_client_options(), **options)
     try:
         client.admin.command('ping')
     except ServerSelectionTimeoutError as exc:

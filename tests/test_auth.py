@@ -1,7 +1,7 @@
 import unittest
 
 from mongolog import MongoHandler
-from tests.support import clean_logger, mongo_client, mongo_options
+from tests.support import clean_logger, mongo_client, mongo_handler_options
 
 
 class TestAuth(unittest.TestCase):
@@ -35,7 +35,7 @@ class TestAuth(unittest.TestCase):
                 self.db_name,
                 username=self.user_name,
                 password=self.password,
-                **mongo_options(),
+                **mongo_handler_options(),
             )
         )
 
